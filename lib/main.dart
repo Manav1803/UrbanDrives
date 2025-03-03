@@ -19,7 +19,7 @@ class UrbanDrivesApp extends StatelessWidget {
         // Add more theme configurations here like font, appbar etc.
       ),
       // Use initialRoute for the first screen to display or home property
-      home: const AuthScreen(), // Example: Start with login screen
+      home: AdminDashboardScreen(), // Example: Start with login screen
     );
   }
 }
