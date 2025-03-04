@@ -9,6 +9,7 @@ import 'search_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'all_vehicle_screen.dart'; // Import the all vehicle screen
 import 'brand_vehiclelist_screen.dart'; // Import the BrandVehicleListScreen
+import 'chatbot_screen.dart'; // Import the ChatbotScreen
 
 class HomeScreen extends StatefulWidget {
   final String userEmail;
@@ -138,10 +139,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Urban Drives'),
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -169,8 +166,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                         IconButton(
-                          icon: const Icon(Icons.settings_suggest_outlined),
-                          onPressed: () {},
+                          icon: const Icon(Icons.chat_bubble_outline),  // Changed Icon
+                          onPressed: () {  // Added onPressed navigation
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ChatbotScreen(),
+                              ),
+                            );
+                          },
                         )
                       ],
                     ),

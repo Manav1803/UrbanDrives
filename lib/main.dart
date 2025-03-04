@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'screen/admin/admin_dashboard_screen.dart';
 import 'screen/auth/auth_Screen.dart';
+import 'screen/home/chatbot_screen.dart';
 
 void main() {
   runApp(const UrbanDrivesApp());
