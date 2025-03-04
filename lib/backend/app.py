@@ -207,33 +207,45 @@ def switch_role():
 def validate_update_profile_data(data):
     if not isinstance(data, dict):
         return 'Invalid data type: data should be a dictionary', 400
+
     required_fields = ["current_email", "userName", "phone"]
     missing_fields = [field for field in required_fields if field not in data]
+
     if missing_fields:
         return f"Missing fields: {', '.join(missing_fields)}", 400
-    if not isinstance(data["current_email"], str) or not data["current_email"] or '@' not in data["email"]:
+
+    if not isinstance(data["current_email"], str) or not data["current_email"] or '@' not in data["current_email"]:
         return "Invalid current email format", 400
     if not isinstance(data["userName"], str):
         return "Username is required", 400
     if not isinstance(data["phone"], str):
         return "Phone must be a string", 400
+
     return None, 200
 
 
 @app.route('/update-profile', methods=['POST'])
 def update_profile():
     data = request.get_json()
+
     validation_message, status_code = validate_update_profile_data(data)
     if validation_message:
         return jsonify({'message': validation_message}), status_code
+
+    print("Searching for:", data["current_email"])
     user = users_collection.find_one({'email': data['current_email']})
+    print("User found:", user)
+
     if user:
         update_data = {}
-        if data['userName']:
+        if "userName" in data and data["userName"]:
             update_data['userName'] = data['userName']
-        if data['phone']:
+        if "phone" in data and data["phone"]:
             update_data['phone'] = data['phone']
-        users_collection.update_one({'email': data['current_email']}, {'$set': update_data})
+
+        if update_data:
+            users_collection.update_one({'email': data['current_email']}, {'$set': update_data})
+
         return jsonify({'message': 'Profile Updated Successfully'}), 200
     else:
         return jsonify({'message': 'User not found'}), 404
@@ -460,8 +472,6 @@ def get_all_cars():
         return jsonify({'message':'Failed to fetch cars','error':str(e)}),500
 
 
-
-
 def validate_delete_car_data(data):
     if not isinstance(data,dict):
         return 'Invalid data type: data should be a dictionary', 400
@@ -686,6 +696,7 @@ def create_booking():
           return jsonify({'message':'Failed to create booking','error':str(e)}),500
 
 
+
 def validate_get_trips_data(data):
     if not isinstance(data, dict):
         return 'Invalid data type: data should be a dictionary', 400
@@ -735,6 +746,7 @@ def validate_update_trip_status_data(data):
     if data['tripStatus'] not in ("Ongoing", "Completed"):
         return "tripStatus can only be Ongoing or Completed", 400
     return None, 200
+
 
 @app.route('/update-trip-status',methods=['POST'])
 def update_trip_status():
@@ -1047,8 +1059,6 @@ def search_cars():
     except Exception as e:
         print(f"Error searching cars: {e}")
         return jsonify({'message': 'Failed to search cars', 'error': str(e)}), 500
-
-
 
 
 @app.route('/get-cars-by-brand', methods=['POST'])
@@ -1788,9 +1798,12 @@ def get_line_chart_data():
         return jsonify({'message': 'Failed to fetch data', 'error': str(e)}), 500
 
 
-
 @app.route('/car-trip-data', methods=['GET'])
 def get_car_trip_data():
+    year = request.args.get('year', type=int)
+    month = request.args.get('month', type=int)
+    if not year or not month:
+        return jsonify({'message': 'Year and month are required'}), 400
     try:
         # 1. Retrieve a List of Active Car Models
         existing_cars = list(cars_collection.find({}, {'carModel': 1, '_id': 0}))  # Fetch car models from cars collection
@@ -1801,7 +1814,12 @@ def get_car_trip_data():
         pipeline = [
             {
                 '$match': {
-                    'carModel': {'$in': existing_car_models}  # Only include trips for existing car models
+                    'carModel': {'$in': existing_car_models},  # Only include trips for existing car models
+                    # ADD MONTH and YEAR check to prevent the logic from breaking;
+                    'created_at': {
+                        '$gte': datetime(year,month,1),
+                        '$lt': datetime(year,month+1,1) if month < 12 else datetime(year+1,1,1)
+                    }
                 }
             },
             {
