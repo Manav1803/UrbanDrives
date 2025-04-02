@@ -32,9 +32,7 @@ BOOKINGS_COLLECTION = "bookings"
 TRIPS_COLLECTION = "trips"  # New collection for trips
 REVIEWS_COLLECTION = "reviews"
 DASHBOARD_METRICS_COLLECTION = "dashboard_metrics"
-# CHANGED COLLECTION NAME HERE
 BANNER_COLLECTION = 'banner_images'  # Changed Collection name
-MESSAGES_COLLECTION = "messages" #New collection for messages
 
 
 
@@ -47,8 +45,6 @@ trips_collection = db[TRIPS_COLLECTION]  # Initialize trips collection
 reviews_collection = db[REVIEWS_COLLECTION]
 dashboard_metrics_collection = db[DASHBOARD_METRICS_COLLECTION] # define the collection similar to other collections
 banners_collection = db[BANNER_COLLECTION]  # Define the uploads collection
-messages_collection = db[MESSAGES_COLLECTION] # Define collection for messages
-
 
 
 def validate_register_data(data):
