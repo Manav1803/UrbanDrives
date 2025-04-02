@@ -3,10 +3,13 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+
+
 import 'admin_cars_screen.dart';
 import 'admin_user_screen.dart';
 import 'admin_trips_screen.dart' as trips;
 import 'admin_bookings_screen.dart';
+import 'banner_screen.dart';
 import 'city_map_screen.dart';
 
 // Model Classes (Outside of any Widget class)
@@ -158,6 +161,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           return AdminBookingsScreen();
         case 'City':
           return CityMapScreen();
+        case 'Banners':
+          return Bannerscreen();
         case 'FAQ\'s':
           return Center(child: Text('FAQ\'s Screen Content'));
         case 'Help':
@@ -1205,6 +1210,14 @@ class Sidebar extends StatelessWidget {
             isSelected: selectedMenu == 'City',
             onTap: () {
               onMenuSelected('City');
+            },
+          ),
+          SidebarMenuItem(
+            title: 'Banners',
+            icon: Icons.image_aspect_ratio, // Or a suitable icon
+            isSelected: selectedMenu == 'Banners',
+            onTap: () {
+              onMenuSelected('Banners');
             },
           ),
           SidebarMenuItem(

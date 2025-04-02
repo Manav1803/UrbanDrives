@@ -11,10 +11,17 @@ import json
 from bson import json_util  # Import json_util
 import pymongo
 import pytz  # To help make timezones.
-
+import os
+from flask import send_from_directory
 
 app = Flask(__name__)
 CORS(app)
+
+
+# Configuration
+UPLOAD_FOLDER = 'uploads'  # Define the upload folder
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER  # Set the configuration variable
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Create folder if it doesn't exist
 
 
 MONGO_URI = "mongodb://localhost:27017/urban_drive"
@@ -25,6 +32,10 @@ BOOKINGS_COLLECTION = "bookings"
 TRIPS_COLLECTION = "trips"  # New collection for trips
 REVIEWS_COLLECTION = "reviews"
 DASHBOARD_METRICS_COLLECTION = "dashboard_metrics"
+# CHANGED COLLECTION NAME HERE
+BANNER_COLLECTION = 'banner_images'  # Changed Collection name
+MESSAGES_COLLECTION = "messages" #New collection for messages
+
 
 
 client = MongoClient(MONGO_URI)
@@ -35,6 +46,9 @@ bookings_collection = db[BOOKINGS_COLLECTION]
 trips_collection = db[TRIPS_COLLECTION]  # Initialize trips collection
 reviews_collection = db[REVIEWS_COLLECTION]
 dashboard_metrics_collection = db[DASHBOARD_METRICS_COLLECTION] # define the collection similar to other collections
+banners_collection = db[BANNER_COLLECTION]  # Define the uploads collection
+messages_collection = db[MESSAGES_COLLECTION] # Define collection for messages
+
 
 
 def validate_register_data(data):
@@ -2120,6 +2134,121 @@ def get_city_details():
         traceback.print_exc()
         return jsonify({'message': 'Failed to fetch city details', 'error': str(e)}), 500
 
+
+# banner
+@app.route('/banners', methods=['GET'])
+def get_banners():
+    """
+    Retrieves all banners from the database.
+    Returns:
+        A JSON response containing a list of banner objects.
+    """
+    banners = []
+    for banner in db.banner_images.find():  # Changed collection name here
+        banners.append({
+            '_id': str(banner['_id']),
+            'imagePath': banner['imagePath'],
+            'isActive': banner['isActive']
+        })
+    return jsonify(banners)
+
+
+@app.route('/banners', methods=['POST'])
+def add_banner():
+    """
+    Adds a new banner to the database. Expects a JSON request with 'image' and 'isActive' fields.
+    'image' should be a base64 encoded string representing the image.
+    'isActive' should be a boolean.
+    Returns:
+        A JSON response containing the ID of the newly created banner.
+    """
+    try:
+        image_data = request.json['image']  # Base64 encoded image data
+        isActive = request.json['isActive']
+        print("Image data received from Flutter:", len(image_data) if image_data else None)  # Log data
+        print("isActive", isActive)
+
+        # Decode the base64 image data
+        image_bytes = base64.b64decode(image_data)
+
+        # Generate a unique filename for the image
+        filename = secrets.token_hex(16) + ".png"  # Use secrets for security
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+        # Save the image to the upload folder
+        with open(filepath, "wb") as f:
+            f.write(image_bytes)
+
+        # Insert the banner data into the database
+        banner_id = db.banner_images.insert_one({  # Changed collection name here
+            'imagePath': filename,  # Store filename not full path
+            'isActive': isActive
+        }).inserted_id
+
+        return jsonify({'_id': str(banner_id)}), 201  # 201 Created
+
+    except Exception as e:
+        print("Image data error for add banner: ", e)
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 400  # 400 Bad Request
+
+
+@app.route('/banners/<id>', methods=['PUT'])
+def update_banner(id):
+    """
+    Updates an existing banner in the database.  Expects a JSON request
+    with 'isActive' field (boolean).
+    Returns:
+        A JSON response indicating success or failure.
+    """
+    try:
+        isActive = request.json['isActive']
+
+        result = db.banner_images.update_one(  # Changed collection name here
+            {'_id': ObjectId(id)},
+            {'$set': {'isActive': isActive}}
+        )
+
+        if result.modified_count > 0:
+            return jsonify({'message': 'Banner updated successfully'})
+        else:
+            return jsonify({'message': 'Banner not found or no changes made'}), 404
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+
+@app.route('/banners/<id>', methods=['DELETE'])
+def delete_banner(id):
+    """
+    Deletes a banner from the database and its associated image file.
+    Returns:
+        A JSON response indicating success or failure.
+    """
+    try:
+        banner = db.banner_images.find_one({'_id': ObjectId(id)})  # Changed collection name here
+        if banner:
+            # Delete the image file
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], banner['imagePath'])
+            if os.path.exists(image_path):
+                os.remove(image_path)
+
+            # Delete the banner from the database
+            db.banner_images.delete_one({'_id': ObjectId(id)})  # Changed collection name here
+            return jsonify({'message': 'Banner deleted successfully'})
+        else:
+            return jsonify({'message': 'Banner not found'}), 404
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+
+@app.route('/uploads/<filename>')
+def send_image(filename):
+    try:
+        return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+    except FileNotFoundError:
+        return jsonify({'message': 'Image not found'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

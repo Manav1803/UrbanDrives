@@ -54,7 +54,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         sender: 'Chatbot',
       ),
     ];
-    _suggestedQuestions = List.from(_allSuggestedQuestions);
+    _suggestedQuestions = List.from(_allSuggestedQuestions); // Initialize suggested questions
 
     // Load the logo immediately and set _isLogoLoaded to true when done
     _loadImage().then((_) {

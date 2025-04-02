@@ -1,4 +1,5 @@
 // homescreen.dart
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
@@ -24,12 +25,14 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
   String? _userId;
   Map<String, double> _averageRatings = {};
+  List<dynamic> _banners = [];
 
   @override
   void initState() {
     super.initState();
     _loadUserId();
     _fetchCars();
+    _fetchBanners(); // Make sure this line is present
   }
 
   Future<void> _loadUserId() async {
@@ -116,6 +119,25 @@ class _HomeScreenState extends State<HomeScreen> {
       _averageRatings = fetchedRatings;
     });
   }
+
+// banners
+  Future<void> _fetchBanners() async {
+  try {
+    final response = await http.get(Uri.parse('http://127.0.0.1:5000/banners'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      setState(() {
+        _banners = data.where((banner) => banner['isActive'] == true).toList();
+        print('Banners fetched successfully: $_banners'); // Add this line
+      });
+    } else {
+      print('Failed to fetch banners: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Error fetching banners: $e');
+  }
+}
 
 
   List<Map<String, dynamic>> getSortedCarList() {
@@ -213,160 +235,129 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     const SizedBox(height: 15),
-                    // Banner
-                    Container(
-                      height: 200,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          image: const DecorationImage(
-                            image: AssetImage('assets/images/50% disc.jpg'),
-                            fit: BoxFit.cover,
-                          )),
-                      child: Stack(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                gradient: LinearGradient(
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
-                                    colors: [
-                                      Colors.black.withOpacity(0.6),
-                                      Colors.transparent
-                                    ])),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Align(
-                              alignment: Alignment.bottomLeft,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    '50% OFF \n',
-                                    style: TextStyle(
-                                        fontSize: 22,
-                                        color: Colors.lightBlue,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  RichText(
-                                    textAlign: TextAlign.center,
-                                    text: const TextSpan(
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                      children: [
-                                        TextSpan(
-                                            text:
-                                                '🚗 Get 50% OFF on Your Next Drive!\n'),
-                                        TextSpan(text: 'Use code '),
-                                        TextSpan(
-                                          text: ' DRIVE5️0 ',
-                                          style: TextStyle(
-                                              fontSize: 20,
-                                              color: Colors.lightBlue,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        TextSpan(
-                                            text:
-                                                ' at checkout & book now! 🚀'),
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
+                     // Banner
+                    _buildBannerSection(),
                     const SizedBox(height: 20),
                     // Top Category
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Top Category',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                   Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+        const Text(
+            'Top Category',
+            style: TextStyle(
+                fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+    ],
+),
+const SizedBox(height: 10),
+SizedBox(
+    height: 100,
+    child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+            InkWell(
+                onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                BrandVehicleListScreen(
+                                    brandName: 'Audi',
+                                    userId: _userId!,
+                                ),
                         ),
-                        TextButton(
-                          onPressed: () {
-                            // Navigate to see all categories
-                          },
-                          child: const Text('See All >',
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.blue)),
+                    );
+                },
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final screenWidth = MediaQuery.of(context).size.width;
+                    final categoryCardWidth = screenWidth * 0.2; // Adjust 0.2 as needed
+                      return _buildCategoryCard(
+                        'assets/images/audi logo.jpg',
+                        'Audi',
+                        categoryCardWidth,
+                    );
+                  }
+                )
+            ),
+            InkWell(
+                onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                BrandVehicleListScreen(
+                                    brandName: 'BMW',
+                                    userId: _userId!,
+                                ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 100,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => BrandVehicleListScreen(
-                                    brandName: 'Audi', // Or any other brand name
+                    );
+                },
+                 child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final screenWidth = MediaQuery.of(context).size.width;
+                    final categoryCardWidth = screenWidth * 0.2; // Adjust 0.2 as needed
+                    return _buildCategoryCard(
+                        'assets/images/bmw logo.jpg',
+                        'BMW',
+                         categoryCardWidth,
+                    );
+                  }
+                )
+            ),
+            InkWell(
+                onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                BrandVehicleListScreen(
+                                    brandName: 'Tata',
                                     userId: _userId!,
-                                  ),
                                 ),
-                              );
-                            },
-                            child: _buildCategoryCard('assets/images/audi logo.jpg', 'Audi', cardWidth),
-                          ),
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => BrandVehicleListScreen(
-                                    brandName: 'BMW', // Or any other brand name
+                        ),
+                    );
+                },
+                 child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final screenWidth = MediaQuery.of(context).size.width;
+                    final categoryCardWidth = screenWidth * 0.2; // Adjust 0.2 as needed
+                    return _buildCategoryCard(
+                        'assets/images/tata_logo.jpg',
+                        'Tata',
+                         categoryCardWidth,
+                    );
+                  }
+                )
+            ),
+            InkWell(
+                onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                BrandVehicleListScreen(
+                                    brandName: 'Toyota',
                                     userId: _userId!,
-                                  ),
                                 ),
-                              );
-                            },
-                            child: _buildCategoryCard('assets/images/bmw logo.jpg', 'BMW', cardWidth),
-                          ),
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => BrandVehicleListScreen(
-                                    brandName: 'Tata', // Or any other brand name
-                                    userId: _userId!,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: _buildCategoryCard('assets/images/tata_logo.jpg', 'Tata', cardWidth),
-                          ),
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => BrandVehicleListScreen(
-                                    brandName: 'Toyota', // Or any other brand name
-                                    userId: _userId!,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: _buildCategoryCard('assets/images/toyota logo.png', 'Toyota', cardWidth),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                    );
+                },
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final screenWidth = MediaQuery.of(context).size.width;
+                    final categoryCardWidth = screenWidth * 0.2; // Adjust 0.2 as needed
+                    return _buildCategoryCard(
+                        'assets/images/toyota logo.png',
+                        'Toyota',
+                         categoryCardWidth,
+                    );
+                  }
+                )
+            ),
+        ],
+    ),
+),
                     const SizedBox(height: 20),
                     // Top Rated Cars
                     Row(
@@ -423,37 +414,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-    );
-  }
-
-  Widget _buildCategoryCard(String image, String label, double width) {
-    return SizedBox(
-      width: width,
-      child: Column(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Image.asset(
-                image,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
     );
   }
 
@@ -553,6 +513,101 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         }),
+      ),
+    );
+  }
+
+  // banner widget
+
+  Widget _buildBannerSection() {
+    if (_banners.isEmpty) {
+      return Container(
+        height: 200,
+        width: MediaQuery.of(context).size.width,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          image: const DecorationImage(
+            image: AssetImage('assets/images/50% disc.jpg'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: const Center(child: Text('No banners available')),
+      );
+    } else if (_banners.length == 1) {
+      // Display single banner if only one is available
+      return Container(
+        height: 200,
+        width: MediaQuery.of(context).size.width,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          image: DecorationImage(
+            image: NetworkImage('http://127.0.0.1:5000/uploads/${_banners[0]['imagePath']}'),
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    } else {
+      // Use CarouselSlider for multiple banners
+      return CarouselSlider(
+        options: CarouselOptions(
+          height: 200.0,
+          autoPlay: true,
+          enlargeCenterPage: true,
+          aspectRatio: 16 / 9,
+          autoPlayCurve: Curves.fastOutSlowIn,
+          enableInfiniteScroll: true,
+          autoPlayAnimationDuration: const Duration(milliseconds: 800),
+          viewportFraction: 0.8,
+        ),
+        items: _banners.map((banner) {
+          return Builder(
+            builder: (BuildContext context) {
+              return Container(
+                width: MediaQuery.of(context).size.width,
+                margin: const EdgeInsets.symmetric(horizontal: 5.0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  image: DecorationImage(
+                    image:
+                        NetworkImage('http://127.0.0.1:5000/uploads/${banner['imagePath']}'),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              );
+            },
+          );
+        }).toList(),
+      );
+    }
+  }
+
+  Widget _buildCategoryCard(String image, String label, double width) {
+    return SizedBox(
+      width: width,
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Image.asset(
+                image,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+        ],
       ),
     );
   }

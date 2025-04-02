@@ -50,11 +50,8 @@ class AddCarFormState extends State<AddCarForm> {
   String? _seatingCapacity;
   String? _bodyType;
 
-  //Location Variables
-  // double? _latitude;
-  // double? _longitude;
 
-  //Date and Time Variables
+//Date and Time Variables
   DateTime? _startDate;
   TimeOfDay? _startTime;
   DateTime? _endDate;

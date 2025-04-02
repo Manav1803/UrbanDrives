@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'screen/admin/admin_dashboard_screen.dart';
 import 'screen/auth/auth_Screen.dart';
-import 'screen/home/chatbot_screen.dart';
 
 void main() {
   runApp(const UrbanDrivesApp());
@@ -20,7 +19,7 @@ class UrbanDrivesApp extends StatelessWidget {
         // Add more theme configurations here like font, appbar etc.
       ),
       // Use initialRoute for the first screen to display or home property
-      home: const AuthScreen(), // Example: Start with login screen
+      home: AdminDashboardScreen() // Example: Start with login screen
     );
   }
 }
